@@ -20,11 +20,6 @@ import android.graphics.Paint;
 import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
 import android.os.Build;
-import androidx.annotation.ColorInt;
-import androidx.annotation.DrawableRes;
-import androidx.annotation.IdRes;
-import androidx.annotation.StringRes;
-import androidx.recyclerview.widget.RecyclerView;
 import android.text.util.Linkify;
 import android.util.SparseArray;
 import android.view.View;
@@ -42,11 +37,18 @@ import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
+import androidx.annotation.ColorInt;
+import androidx.annotation.DrawableRes;
+import androidx.annotation.IdRes;
+import androidx.annotation.StringRes;
+import androidx.recyclerview.widget.RecyclerView;
+
 
 /**
  * https://github.com/CymChad/BaseRecyclerViewAdapterHelper
  */
-public class BaseViewHolder extends RecyclerView.ViewHolder {
+public class BaseViewHolder<D> extends RecyclerView.ViewHolder {
+    D mSaveData;
 
     /**
      * Views indexed with their IDs
@@ -87,7 +89,7 @@ public class BaseViewHolder extends RecyclerView.ViewHolder {
     }
 
     private int getClickPosition() {
-        if (getLayoutPosition()>=adapter.getHeaderLayoutCount()){
+        if (getLayoutPosition() >= adapter.getHeaderLayoutCount()) {
             return getLayoutPosition() - adapter.getHeaderLayoutCount();
         }
         return 0;
@@ -614,10 +616,37 @@ public class BaseViewHolder extends RecyclerView.ViewHolder {
         this.associatedObject = associatedObject;
     }
 
+    /**
+     * 发送消息到Adapter
+     *
+     * @param what
+     * @param obj
+     */
     protected final void sendMessage(final int what, final Object obj) {
         this.adapter.sendMessage(what, obj, getLayoutPosition());
     }
 
+    /**
+     * 通知Adapter数据变化
+     */
+    protected final void notifyDataChange() {
+        this.adapter.notifyDataChange();
+    }
 
+    /**
+     * 获取当前UI对应的数据
+     *
+     * @return object
+     */
+    public D getSaveData() {
+        return mSaveData;
+    }
 
+    public void setData(D data) {
+        mSaveData = data;
+        onUpdateUI(data);
+    }
+
+    public void onUpdateUI(D data) {
+    }
 }
