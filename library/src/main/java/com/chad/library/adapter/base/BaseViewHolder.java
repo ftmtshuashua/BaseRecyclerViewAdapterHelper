@@ -613,4 +613,11 @@ public class BaseViewHolder extends RecyclerView.ViewHolder {
     public void setAssociatedObject(Object associatedObject) {
         this.associatedObject = associatedObject;
     }
+
+    protected final void sendMessage(final int what, final Object obj) {
+        this.adapter.sendMessage(what, obj, getLayoutPosition());
+    }
+
+
+
 }

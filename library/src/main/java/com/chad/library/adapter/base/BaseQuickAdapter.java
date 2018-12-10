@@ -17,17 +17,6 @@ package com.chad.library.adapter.base;
 
 import android.animation.Animator;
 import android.content.Context;
-import androidx.annotation.IdRes;
-import androidx.annotation.IntDef;
-import androidx.annotation.IntRange;
-import androidx.annotation.LayoutRes;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.recyclerview.widget.GridLayoutManager;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
-import androidx.recyclerview.widget.RecyclerView.LayoutParams;
-import androidx.recyclerview.widget.StaggeredGridLayoutManager;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -57,6 +46,18 @@ import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+
+import androidx.annotation.IdRes;
+import androidx.annotation.IntDef;
+import androidx.annotation.IntRange;
+import androidx.annotation.LayoutRes;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.recyclerview.widget.GridLayoutManager;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+import androidx.recyclerview.widget.RecyclerView.LayoutParams;
+import androidx.recyclerview.widget.StaggeredGridLayoutManager;
 
 import static android.view.ViewGroup.LayoutParams.MATCH_PARENT;
 import static android.view.ViewGroup.LayoutParams.WRAP_CONTENT;
@@ -100,6 +101,7 @@ public abstract class BaseQuickAdapter<T, K extends BaseViewHolder> extends Recy
     private OnItemLongClickListener mOnItemLongClickListener;
     private OnItemChildClickListener mOnItemChildClickListener;
     private OnItemChildLongClickListener mOnItemChildLongClickListener;
+
 
     @IntDef({ALPHAIN, SCALEIN, SLIDEIN_BOTTOM, SLIDEIN_LEFT, SLIDEIN_RIGHT})
     @Retention(RetentionPolicy.SOURCE)
@@ -452,11 +454,13 @@ public abstract class BaseQuickAdapter<T, K extends BaseViewHolder> extends Recy
     /**
      * If you have added headeview, the notification view refreshes.
      * Do not need to care about the number of headview, only need to pass in the position of the final view
+     *
      * @param position
      */
     public final void refreshNotifyItemChanged(int position) {
         notifyItemChanged(position + getHeaderLayoutCount());
     }
+
     /**
      * Same as QuickAdapter#QuickAdapter(Context,int) but with
      * some initialization data.
@@ -469,6 +473,44 @@ public abstract class BaseQuickAdapter<T, K extends BaseViewHolder> extends Recy
         if (layoutResId != 0) {
             this.mLayoutResId = layoutResId;
         }
+
+        registerAdapterDataObserver(new RecyclerView.AdapterDataObserver() {
+            @Override
+            public void onChanged() {
+                super.onChanged();
+                notifyDataChange();
+            }
+
+            @Override
+            public void onItemRangeChanged(int positionStart, int itemCount) {
+                super.onItemRangeChanged(positionStart, itemCount);
+                notifyDataChange();
+            }
+
+            @Override
+            public void onItemRangeChanged(int positionStart, int itemCount, @Nullable Object payload) {
+                super.onItemRangeChanged(positionStart, itemCount, payload);
+                notifyDataChange();
+            }
+
+            @Override
+            public void onItemRangeInserted(int positionStart, int itemCount) {
+                super.onItemRangeInserted(positionStart, itemCount);
+                notifyDataChange();
+            }
+
+            @Override
+            public void onItemRangeRemoved(int positionStart, int itemCount) {
+                super.onItemRangeRemoved(positionStart, itemCount);
+                notifyDataChange();
+            }
+
+            @Override
+            public void onItemRangeMoved(int fromPosition, int toPosition, int itemCount) {
+                super.onItemRangeMoved(fromPosition, toPosition, itemCount);
+                notifyDataChange();
+            }
+        });
     }
 
     public BaseQuickAdapter(@Nullable List<T> data) {
@@ -478,6 +520,8 @@ public abstract class BaseQuickAdapter<T, K extends BaseViewHolder> extends Recy
     public BaseQuickAdapter(@LayoutRes int layoutResId) {
         this(layoutResId, null);
     }
+
+
 
     /**
      * setting up a new instance to data;
@@ -1356,9 +1400,9 @@ public abstract class BaseQuickAdapter<T, K extends BaseViewHolder> extends Recy
 
     /**
      * bind recyclerView {@link #bindToRecyclerView(RecyclerView)} before use!
-     * Recommend you to use {@link #setEmptyView(layoutResId,viewGroup)}
-     * @see #bindToRecyclerView(RecyclerView)
+     * Recommend you to use {@link #setEmptyView(layoutResId, viewGroup)}
      *
+     * @see #bindToRecyclerView(RecyclerView)
      */
     @Deprecated
     public void setEmptyView(int layoutResId) {
@@ -1572,6 +1616,7 @@ public abstract class BaseQuickAdapter<T, K extends BaseViewHolder> extends Recy
     public void openLoadAnimation() {
         this.mOpenAnimationEnable = true;
     }
+
     /**
      * To close the animation when loading
      */
@@ -2058,5 +2103,77 @@ public abstract class BaseQuickAdapter<T, K extends BaseViewHolder> extends Recy
     @Nullable
     public final OnItemChildLongClickListener getOnItemChildLongClickListener() {
         return mOnItemChildLongClickListener;
+    }
+
+
+    /**
+     * ViewHolder消息观察者，用于接收来自ViewHolder通过sendMessage()方法发出的消息
+     */
+    public interface ViewHolderMessageHandler<E> {
+
+        /**
+         * 接收到一条来自ViewHolder的消息
+         *
+         * @param what        消息标记
+         * @param obj         消息中携带数据
+         * @param layoutIndex 该ViewHolder在Adapter中的位置
+         */
+        void handlerAdapterMessage(int what, E obj, int layoutIndex);
+
+    }
+
+    /* ViewHolder消息处理器 */
+    private ArrayList<ViewHolderMessageHandler> mViewHolderMessageHandler = new ArrayList<>();
+
+
+    /**
+     * ViewHolder消息处理器，用于接收和处理来自ViewHolder的消息
+     *
+     * @param handler ViewHolderMessageHandler
+     */
+    public void addViewHolderMessageHandler(ViewHolderMessageHandler handler) {
+        mViewHolderMessageHandler.add(handler);
+    }
+
+    public void removeViewHolderMessageHandler(ViewHolderMessageHandler handler) {
+        mViewHolderMessageHandler.remove(handler);
+    }
+
+    public void sendMessage(final int what, final Object obj, final int position) {
+        Utils.map(mViewHolderMessageHandler, new Utils.Action1<BaseQuickAdapter.ViewHolderMessageHandler>() {
+            @Override
+            public void call(BaseQuickAdapter.ViewHolderMessageHandler viewHolderMessageHandler) {
+                viewHolderMessageHandler.handlerAdapterMessage(what, obj, position);
+            }
+        });
+    }
+
+    /* 数据变化监听 */
+    private OnAdapterDataChangeListener mOnAdapterDataChangeListener;
+
+    /**
+     * 添加数据变化检查
+     *
+     * @param l OnAdapterDataChange
+     */
+    public void setOnAdapterDataChangeListener(OnAdapterDataChangeListener  l) {
+        mOnAdapterDataChangeListener = l;
+    }
+    /**
+     * 适配器的数据变化监听器,当Set，Add，Remove方法被调用的时候，该监听器能接收到反馈
+     */
+    public interface OnAdapterDataChangeListener  {
+        /**
+         * 当Adapter数据变化的时候
+         *
+         * @param adapter The adapter
+         */
+        void onChange(BaseQuickAdapter  adapter);
+    }
+    /**
+     * 通知数据变化,通过setOnAdapterDataChangeListener方法接收这个通知
+     */
+    protected void notifyDataChange() {
+        if (mOnAdapterDataChangeListener != null) mOnAdapterDataChangeListener.onChange(this);
     }
 }
