@@ -649,4 +649,8 @@ public class BaseViewHolder<D> extends RecyclerView.ViewHolder {
 
     public void onUpdateUI(D data) {
     }
+
+    public BaseQuickAdapter getAdapter() {
+        return this.adapter;
+    }
 }
