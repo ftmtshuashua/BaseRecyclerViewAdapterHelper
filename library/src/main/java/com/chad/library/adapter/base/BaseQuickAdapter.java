@@ -2195,7 +2195,7 @@ public abstract class BaseQuickAdapter<T, K extends BaseViewHolder> extends Enha
         Utils.map(mOnAdapterDataChangeListenerArray, new Utils.Action1<OnAdapterDataChangeListener>() {
             @Override
             public void call(OnAdapterDataChangeListener onAdapterDataChangeListener) {
-                mOnAdapterDataChangeListener.onChange(BaseQuickAdapter.this);
+                onAdapterDataChangeListener.onChange(BaseQuickAdapter.this);
             }
         });
     }
