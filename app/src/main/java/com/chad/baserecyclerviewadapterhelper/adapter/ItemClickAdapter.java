@@ -2,6 +2,8 @@ package com.chad.baserecyclerviewadapterhelper.adapter;
 
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+
+import android.annotation.SuppressLint;
 import android.view.View;
 import android.widget.Toast;
 
@@ -32,6 +34,7 @@ public class ItemClickAdapter extends BaseMultiItemQuickAdapter<ClickEntity, Bas
     }
 
 
+    @SuppressLint("WrongConstant")
     @Override
     protected void convert(final BaseViewHolder helper, final ClickEntity item) {
         switch (helper.getItemViewType()) {
@@ -52,7 +55,7 @@ public class ItemClickAdapter extends BaseMultiItemQuickAdapter<ClickEntity, Bas
                 break;
             case ClickEntity.NEST_CLICK_ITEM_CHILD_VIEW:
                 helper.setNestView(R.id.item_click); // u can set nestview id
-                final RecyclerView recyclerView = helper.getView(R.id.nest_list);
+                final RecyclerView recyclerView = (RecyclerView) helper.getView(R.id.nest_list);
                 recyclerView.setLayoutManager(new LinearLayoutManager(helper.itemView.getContext(), LinearLayoutManager.VERTICAL, false));
                 recyclerView.setHasFixedSize(true);
 

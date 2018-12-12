@@ -35,6 +35,7 @@ import android.widget.TextView;
 
 import java.util.HashSet;
 import java.util.LinkedHashSet;
+import java.util.Map;
 import java.util.Set;
 
 import androidx.annotation.ColorInt;
@@ -652,5 +653,22 @@ public class BaseViewHolder<D> extends RecyclerView.ViewHolder {
 
     public BaseQuickAdapter getAdapter() {
         return this.adapter;
+    }
+
+
+    /**
+     * 在固定的位置，绑定
+     *
+     * @param key
+     * @return
+     */
+    public Object getCacheAtPosition(String key) {
+        Map<String, Object> cache = this.adapter.getCache(getLayoutPosition());
+        return cache.get(key);
+    }
+
+    public void setCacheAtPosition(String key, Object obj) {
+        Map<String, Object> cache = this.adapter.getCache(getLayoutPosition());
+        cache.put(key, obj);
     }
 }

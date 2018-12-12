@@ -66,7 +66,7 @@ import static android.view.ViewGroup.LayoutParams.WRAP_CONTENT;
 /**
  * https://github.com/CymChad/BaseRecyclerViewAdapterHelper
  */
-public abstract class BaseQuickAdapter<T, K extends BaseViewHolder> extends RecyclerView.Adapter<K> {
+public abstract class BaseQuickAdapter<T, K extends BaseViewHolder> extends EnhanceRecyclerViewAdapter<K> {
 
     //load more
     private boolean mNextLoadEnable = false;
@@ -520,7 +520,6 @@ public abstract class BaseQuickAdapter<T, K extends BaseViewHolder> extends Recy
     public BaseQuickAdapter(@LayoutRes int layoutResId) {
         this(layoutResId, null);
     }
-
 
 
     /**
@@ -1400,7 +1399,6 @@ public abstract class BaseQuickAdapter<T, K extends BaseViewHolder> extends Recy
 
     /**
      * bind recyclerView {@link #bindToRecyclerView(RecyclerView)} before use!
-     * Recommend you to use {@link #setEmptyView(layoutResId, viewGroup)}
      *
      * @see #bindToRecyclerView(RecyclerView)
      */
@@ -2150,30 +2148,55 @@ public abstract class BaseQuickAdapter<T, K extends BaseViewHolder> extends Recy
 
     /* 数据变化监听 */
     private OnAdapterDataChangeListener mOnAdapterDataChangeListener;
+    private ArrayList<OnAdapterDataChangeListener> mOnAdapterDataChangeListenerArray = new ArrayList<>();
 
     /**
      * 添加数据变化检查
      *
      * @param l OnAdapterDataChange
      */
-    public void setOnAdapterDataChangeListener(OnAdapterDataChangeListener  l) {
+    public void setOnAdapterDataChangeListener(OnAdapterDataChangeListener l) {
         mOnAdapterDataChangeListener = l;
     }
+
+    /**
+     * 添加数据变化检查
+     *
+     * @param l OnAdapterDataChange
+     */
+    public void addOnAdapterDataChangeListener(OnAdapterDataChangeListener l) {
+        Utils.requireNonNull(l);
+        mOnAdapterDataChangeListenerArray.add(l);
+    }
+
+    public void removeOnAdapterDataChangeListener(OnAdapterDataChangeListener l) {
+        Utils.requireNonNull(l);
+        mOnAdapterDataChangeListenerArray.remove(l);
+    }
+
+
     /**
      * 适配器的数据变化监听器,当Set，Add，Remove方法被调用的时候，该监听器能接收到反馈
      */
-    public interface OnAdapterDataChangeListener  {
+    public interface OnAdapterDataChangeListener {
         /**
          * 当Adapter数据变化的时候
          *
          * @param adapter The adapter
          */
-        void onChange(BaseQuickAdapter  adapter);
+        void onChange(BaseQuickAdapter adapter);
     }
+
     /**
      * 通知数据变化,通过setOnAdapterDataChangeListener方法接收这个通知
      */
     protected void notifyDataChange() {
         if (mOnAdapterDataChangeListener != null) mOnAdapterDataChangeListener.onChange(this);
+        Utils.map(mOnAdapterDataChangeListenerArray, new Utils.Action1<OnAdapterDataChangeListener>() {
+            @Override
+            public void call(OnAdapterDataChangeListener onAdapterDataChangeListener) {
+                mOnAdapterDataChangeListener.onChange(BaseQuickAdapter.this);
+            }
+        });
     }
 }
